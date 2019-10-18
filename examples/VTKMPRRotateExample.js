@@ -71,6 +71,7 @@ class VTKMPRRotateExample extends Component {
     const volumeMapper = vtkVolumeMapper.newInstance();
 
     volumeActor.setMapper(volumeMapper);
+
     reader.setUrl('/headsq.vti', { loadData: true }).then(() => {
       const data = reader.getOutputData();
       volumeMapper.setInputData(data);
