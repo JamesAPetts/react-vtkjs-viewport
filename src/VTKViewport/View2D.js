@@ -144,12 +144,6 @@ export default class View2D extends Component {
     // the vtkOpenGLRenderer instance.
     oglrw.buildPass(true);
 
-    const istyle = vtkjsToolsInteractorStyleManipulator.newInstance({
-      manipulators: defaultIStyleManipulators,
-    });
-
-    this.renderWindow.getInteractor().setInteractorStyle(istyle);
-
     const inter = this.renderWindow.getInteractor();
     const updateCameras = () => {
       const baseCamera = this.renderer.getActiveCamera();
@@ -202,6 +196,18 @@ export default class View2D extends Component {
     filters = [this.paintFilter];
     widgets = [this.paintWidget];
 
+    const api = {};
+
+    const istyle = vtkjsToolsInteractorStyleManipulator.newInstance({
+      manipulators: defaultIStyleManipulators,
+      apiData: {
+        apis: [api],
+        apiIndex: 0,
+      },
+    });
+
+    this.renderWindow.getInteractor().setInteractorStyle(istyle);
+
     // Set orientation based on props
     if (this.props.orientation) {
       const { orientation } = this.props;
@@ -222,7 +228,6 @@ export default class View2D extends Component {
 
     const range = istyle.getSliceRange();
 
-    console.log('RANGE:' + range);
     istyle.setSlice((range[0] + range[1]) / 2);
 
     istyle.onModified(() => {
@@ -257,40 +262,39 @@ export default class View2D extends Component {
 
     this.svgWidgets = {};
 
-    if (this.props.onCreated) {
-      /**
-       * Note: The contents of this Object are
-       * considered part of the API contract
-       * we make with consumers of this component.
-       */
-      const api = {
-        uid, // Tracking id available on `api`
-        genericRenderWindow: this.genericRenderWindow,
-        widgetManager: this.widgetManager,
-        svgWidgetManager: this.svgWidgetManager,
-        addSVGWidget: boundAddSVGWidget,
-        container: this.container.current,
-        widgets,
-        svgWidgets: this.svgWidgets,
-        filters,
-        actors,
-        volumes,
-        _component: this,
-        updateImage: boundUpdateImage,
-        updateVOI: boundUpdateVOI,
-        getOrientation: boundGetOrienation,
-        setInteractorStyle: boundSetInteractorStyle,
-        getSlabThickness: boundGetSlabThickness,
-        setSlabThickness: boundSetSlabThickness,
-        setSegmentRGB: boundSetSegmentRGB,
-        setSegmentRGBA: boundSetSegmentRGBA,
-        setSegmentAlpha: boundSetSegmentAlpha,
-        getEventWindow: boundGetEventWindow,
-        get: boundGetApiProperty,
-        set: boundSetApiProperty,
-        type: 'VIEW2D',
-      };
+    /**
+     * Note: The contents of this Object are
+     * considered part of the API contract
+     * we make with consumers of this component.
+     */
 
+    api.uid = uid; // Tracking id available on `api`
+    api.genericRenderWindow = this.genericRenderWindow;
+    api.widgetManager = this.widgetManager;
+    api.svgWidgetManager = this.svgWidgetManager;
+    api.addSVGWidget = boundAddSVGWidget;
+    api.container = this.container.current;
+    api.widgets = widgets;
+    api.svgWidgets = this.svgWidgets;
+    api.filters = filters;
+    api.actors = actors;
+    api.volumes = volumes;
+    api._component = this; // Back door for testing, here be dragons!
+    api.updateImage = boundUpdateImage;
+    api.updateVOI = boundUpdateVOI;
+    api.getOrientation = boundGetOrienation;
+    api.setInteractorStyle = boundSetInteractorStyle;
+    api.getSlabThickness = boundGetSlabThickness;
+    api.setSlabThickness = boundSetSlabThickness;
+    api.setSegmentRGB = boundSetSegmentRGB;
+    api.setSegmentRGBA = boundSetSegmentRGBA;
+    api.setSegmentAlpha = boundSetSegmentAlpha;
+    api.getEventWindow = boundGetEventWindow;
+    api.get = boundGetApiProperty;
+    api.set = boundSetApiProperty; // TODO -> Make most properties above standard get/sets?
+    api.type = 'VIEW2D';
+
+    if (this.props.onCreated) {
       this.props.onCreated(api);
     }
   }
